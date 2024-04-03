@@ -8,12 +8,12 @@ export function openSearch() {
 
 <div
   className="relative w-full flex items-center justify-center"
-  style={{ height: '24rem', backgroundColor: '#040712', overflow: 'hidden' }}
+  style={{ height: '24rem', backgroundColor: '#00020F', overflow: 'hidden' }}
 >
   <div style={{ flex: 'none' }}>
     <img
     src="/images/image.svg"
-    style={{ height: '400px', backgroundColor: '#040712', pointerEvents: 'none' }}
+    style={{ height: '400px', width: '2000px', pointerEvents: 'none' }}
     />
   </div>
 </div>
@@ -36,7 +36,7 @@ export function openSearch() {
 </div>
 
 <CardGroup cols={3}>
-  <Card title="Guides" icon="book-open" href="/guides">
+  <Card title="Guides" icon="book-open" href="/guides/quickstart">
     Practical guides and best practices to get you up and running quickly.
   </Card>
   <Card title="Reference" icon="code-simple" href="/reference">
@@ -45,17 +45,14 @@ export function openSearch() {
   <Card title="Examples" icon="grid-round" iconType="solid" href="/examples">
     Hands-on examples of Mintlify documentation. 
   </Card>
-  <Card title="Integrations" icon="link-simple" href="/integrations">
+  <Card title="Integrations" icon="link-simple" href="/guides/integrations">
     Mintlify's growing number of third-party integrations.
   </Card>
   <Card title="Tools" icon="wrench" href="/tools">
-    Code and docs for Mintlify utilities and reference architectures.
-  </Card>
-  <Card title="Troubleshooting" icon="bug" href="/troubleshooting">
-    Resolve common Mintlify issues with our troubleshooting guide.
+    Practical toolkits for building your documentation
   </Card>
   <Card title="Releases" icon="party-horn" href="/release-notes">
-    News about features and changes in Mintlify and related tools.
+    News about features and changes in Mintlify.
   </Card>
 </CardGroup>
 
