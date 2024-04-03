@@ -1,71 +1,62 @@
 ---
-title: Introduction
-description: 'Welcome to the home of your new documentation'
+mode: 'custom'
 ---
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.svg"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.svg"
-  alt="Hero Dark"
-/>
+export function openSearch() {
+  document.getElementById('search-bar-entry').click();
+}
 
-## Setting up
+<div
+  className="relative w-full flex items-center justify-center"
+  style={{ height: '24rem', backgroundColor: '#040712', overflow: 'hidden' }}
+>
+  <div style={{ flex: 'none' }}>
+    <img
+    src="/images/image.svg"
+    style={{ height: '400px', backgroundColor: '#040712', pointerEvents: 'none' }}
+    />
+  </div>
+</div>
+<div style={{marginTop: '6rem', marginBottom: '8rem', maxWidth: '70rem', marginLeft: 'auto',
+    marginRight: 'auto', paddingLeft: '1.25rem',
+    paddingRight: '1.25rem' }}>
 
-The first step to world-class documentation is setting up your editing environments.
+<div
+  style={{
+    textAlign: 'center',
+    fontSize: '24px',
+    fontWeight: '600',
+    color: '#121142',
+    marginBottom: '3rem',
+    topMargin: '-1rem'
+  }}
+>
+  Choose a topic below or simply{' '}
+  <span className="text-primary">get started</span>
+</div>
 
-<CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
+<CardGroup cols={3}>
+  <Card title="Guides" icon="book-open" href="/guides">
+    Practical guides and best practices to get you up and running quickly.
   </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
+  <Card title="Reference" icon="code-simple" href="/reference">
+    Comprehensive details about the Mintlify API.
   </Card>
-</CardGroup>
-
-## Make it yours
-
-Update your docs to your brand and add valuable content for the best user conversion.
-
-<CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
+  <Card title="Examples" icon="grid-round" iconType="solid" href="/examples">
+    Hands-on examples of Mintlify documentation. 
   </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
+  <Card title="Integrations" icon="link-simple" href="/integrations">
+    Mintlify's growing number of third-party integrations.
   </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/components/accordion"
-  >
-    Build interactive features and designs to guide your users
+  <Card title="Tools" icon="wrench" href="/tools">
+    Code and docs for Mintlify utilities and reference architectures.
   </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
+  <Card title="Troubleshooting" icon="bug" href="/troubleshooting">
+    Resolve common Mintlify issues with our troubleshooting guide.
+  </Card>
+  <Card title="Releases" icon="party-horn" href="/release-notes">
+    News about features and changes in Mintlify and related tools.
   </Card>
 </CardGroup>
+
+</div>
