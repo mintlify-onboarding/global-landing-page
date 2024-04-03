@@ -130,6 +130,38 @@
       ]
     },
     {
+      "group": "Analytics",
+      "pages": [
+        "guides/api-playground/beneficiaries",
+        "guides/api-playground/credit-batch",
+        "guides/api-playground/create-delivery",
+        "guides/api-playground/delivery",
+        "guides/api-playground/delivery-credit-batches",
+        "guides/api-playground/issuance",
+        "guides/api-playground/issuance-credit-batches",
+        "guides/api-playground/order",
+        "guides/api-playground/order-deliveries",
+        "guides/api-playground/current-organisation",
+        "guides/api-playground/organisation",
+        "guides/api-playground/organisation-credit-balance",
+        "guides/api-playground/organisation-credit-batches",
+        "guides/api-playground/project",
+        "guides/api-playground/create-retirement",
+        "guides/api-playground/retirement",
+        "guides/api-playground/retirement-credit-batches",
+        "guides/api-playground/current-supplier",
+        "guides/api-playground/supplier",
+        "guides/api-playground/supplier-deliveries",
+        "guides/api-playground/supplier-issuances",
+        "guides/api-playground/supplier-orders",
+        "guides/api-playground/supplier-projects",
+        "guides/api-playground/transferees",
+        "guides/api-playground/create-transfer",
+        "guides/api-playground/transfer",
+        "guides/api-playground/transfer-credit-batches"
+      ]
+    },
+    {
       "group": "Support",
       "pages": [
         "integrations/support/overview",
