@@ -1,0 +1,1337 @@
+---
+openapi: 3.0.0
+info:
+  title: Fireworks REST API
+  description:
+    REST API for performing inference on Fireworks large language models
+    (LLMs).
+  version: 0.0.1
+servers:
+  - url: https://api.fireworks.ai/inference/v1/
+paths:
+  "/chat/completions":
+    post:
+      operationId: createChatCompletion
+      summary: POST /chat/completions
+      description: Creates a model response for the given chat conversation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - "$ref": "#/components/schemas/CreateChatCompletionExclusiveFields"
+                - "$ref": "#/components/schemas/BaseCreateCompletionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CreateChatCompletionResponse"
+  "/completions":
+    post:
+      operationId: createCompletion
+      summary: POST /completions
+      description: Creates a completion for the provided prompt and parameters.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - "$ref": "#/components/schemas/CreateCompletionExclusiveFields"
+                - "$ref": "#/components/schemas/BaseCreateCompletionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CreateCompletionResponse"
+  "/image_generation/accounts/fireworks/models/stable-diffusion-xl-1024-v1-0":
+    post:
+      summary: Generate a new image from a text prompt
+      parameters:
+        - "$ref": "#/components/parameters/HuggingfaceHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateImageRequest"
+      responses:
+        200:
+          "$ref": "#/components/responses/ImageResponse"
+        400:
+          description: General error for invalid parameters
+        401:
+          description: API key missing or invalid
+        403:
+          description: Permission denied
+        404:
+          description: The requested resource was not found
+        500:
+          description: Some unexpected server error occurred
+  "/image_generation/accounts/fireworks/models/stable-diffusion-xl-1024-v1-0/image_to_image":
+    post:
+      summary: Generate a new image from an image
+      parameters:
+        - "$ref": "#/components/parameters/HuggingfaceHeader"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              "$ref": "#/components/schemas/CreateImageToImageRequest"
+      responses:
+        200:
+          "$ref": "#/components/responses/ImageResponse"
+        400:
+          description: General error for invalid parameters
+        401:
+          description: API key missing or invalid
+        403:
+          description: Permission denied
+        404:
+          description: The requested resource was not found
+        500:
+          description: Some unexpected server error occurred
+  "/image_generation/accounts/fireworks/models/stable-diffusion-xl-1024-v1-0/control_net":
+    post:
+      summary: Generate a new image using ControlNet with provided image as a guidance
+      parameters:
+        - "$ref": "#/components/parameters/HuggingfaceHeader"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              "$ref": "#/components/schemas/CreateControlNetRequest"
+      responses:
+        200:
+          "$ref": "#/components/responses/ImageResponse"
+        400:
+          description: General error for invalid parameters
+        401:
+          description: API key missing or invalid
+        403:
+          description: Permission denied
+        404:
+          description: The requested resource was not found
+        500:
+          description: Some unexpected server error occurred
+  "/embeddings":
+    post:
+      operationId: createEmbedding
+      summary: Creates an embedding vector representing the input text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmbeddingRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateEmbeddingResponse"
+      x-oaiMeta:
+        name: Create embeddings
+        group: embeddings
+        returns: A list of embedding objects.
+        examples:
+          request:
+            curl: |
+              curl https://api.fireworks.ai/inference/v1/embeddings \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "input": "The food was delicious and the waiter...",
+                  "model": "",
+                  "encoding_format": "float"
+                }'
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              client.embeddings.create(
+                model="nomic-ai/nomic-embed-text-v1.5",
+                input="The food was delicious and the waiter...",
+                encoding_format="float"
+              )
+            node.js: |-
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              async function main() {
+                const embedding = await openai.embeddings.create({
+                  model: "nomic-ai/nomic-embed-text-v1.5",
+                  input: "The quick brown fox jumped over the lazy dog",
+                  encoding_format: "float",
+                });
+
+                console.log(embedding);
+              }
+
+              main();
+          response: |
+            {
+              "object": "list",
+              "data": [
+                {
+                  "object": "embedding",
+                  "embedding": [
+                    0.0023064255,
+                    -0.009327292,
+                    .... (1536 floats total for ada-002)
+                    -0.0028842222,
+                  ],
+                  "index": 0
+                }
+              ],
+              "model": "nomic-ai/nomic-embed-text-v1.5",
+              "usage": {
+                "prompt_tokens": 8,
+                "total_tokens": 8
+              }
+            }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    HuggingfaceHeader:
+      name: Huggingface-Access-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        description: Optional Huggingface access key to use for downloading the LoRA adapter. Only needed if LoRA is provided and the corresponsing Huggingface repo is private.
+  schemas:
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: false
+        message:
+          type: string
+          nullable: false
+        param:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+      required:
+        - type
+        - message
+        - param
+        - code
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          "$ref": "#/components/schemas/Error"
+      required:
+        - error
+    ListModelsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          description: The object type, which is always "list".
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Model"
+      required:
+        - object
+        - data
+    Model:
+      title: Model
+      properties:
+        id:
+          type: string
+          description: The name of the model.
+        object:
+          type: string
+          description: The object type, which is always "model".
+        created:
+          type: integer
+          description: The Unix time in seconds when the model was created.
+        owned_by:
+          type: string
+          description: The ID of the account that owns the model.
+      required:
+        - id
+        - object
+        - created
+        - owned_by
+
+    TextPrompt:
+      type: object
+      properties:
+        text:
+          type: string
+          description: The prompt itself
+          example: "A lighthouse on a cliff"
+          maxLength: 2000
+        weight:
+          type: number
+          description: Weight of the prompt (use negative numbers for negative prompts). Only +1 and -1 are supported right now.
+          format: float
+          default: 1
+      required:
+        - text
+        - weight
+
+    TextPromptForImageToImage:
+      type: string
+      description: |
+        A JSON encoded array of objects, each with field "text" and "weight".
+        For weight of the prompt (use negative numbers for negative prompts), only +1 and -1 are supported right now.
+        Example: "[{\"text\": \"test\", \"weight\": 1}]"
+
+    Sampler:
+      description: We support none and "K_DPMPP_2M" here
+      enum: [K_DPMPP_2M]
+      type: string
+
+    Samples:
+      type: integer
+      description: Number of images to generate
+      default: 1
+      example: 1
+      minimum: 1
+      maximum: 10
+
+    Seed:
+      type: integer
+      description: Random noise seed (omit this option or use `0` for a random seed)
+      default: 0
+      example: 0
+      minimum: 0
+      maximum: 4294967295
+
+    Steps:
+      type: integer
+      description: Number of diffusion steps to run
+      default: 50
+      example: 75
+      minimum: 10
+      maximum: 150
+
+    InitImage:
+      type: string
+      description: Image used to initialize the diffusion process, in lieu of random noise.
+      example: <image binary>
+      format: binary
+
+    ControlImage:
+      type: string
+      description: Image to use as a guidance for ControlNet.
+      example: <image binary>
+      format: binary
+
+    Height:
+      type: integer
+      description: Height of the image in pixels. Supported resolutions (width, height) are (1024, 1024), (1152, 896), (896, 1152), (1216, 832), (832, 1216), (1344, 768), (768, 1344), (1536, 640), and (640, 1536).
+      default: 1024
+      minimum: 512
+      maximum: 1024
+
+    Width:
+      type: integer
+      description: Width of the image in pixels. Supported resolutions (width, height) are (1024, 1024), (1152, 896), (896, 1152), (1216, 832), (832, 1216), (1344, 768), (768, 1344), (1536, 640), and (640, 1536).
+      default: 1024
+      minimum: 512
+      maximum: 1024
+
+    CFGScale:
+      type: number
+      description: Configuration scale for the image diffusion process. Adjust the description as needed.
+      default: 7
+
+    BaseImageToImageRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: The prompt to use when transforming the image
+        negative_prompt:
+          type: string
+          description: The negative prompt to use when transforming the image
+          default: null
+        init_image:
+          $ref: '#/components/schemas/InitImage'
+        init_image_mode:
+          type: string
+        cfg_scale:
+          type: integer
+          default: 7
+        clip_guidance_preset:
+          type: string
+          default: "NONE"
+        sampler:
+          $ref: '#/components/schemas/Sampler'
+        samples:
+          $ref: '#/components/schemas/Samples'
+        seed:
+          $ref: '#/components/schemas/Seed'
+        steps:
+          $ref: '#/components/schemas/Steps'
+        safety_check:
+          description: Enable a safety check for each response. If the safety check model detects unsafe content, the response will be filtered with Finish-Reason = CONTENT_FILTERED.
+          type: boolean
+          default: false
+        lora_adapter_name:
+          description: A huggingface name (e.g. jbilcke-hf/sdxl-botw) that specifies which LoRA adapter to load and run in SDXL inference.
+          type: string
+          nullable: true
+        lora_weight_filename:
+          description: The filename (e.g. lora.safetensors) of the file within the HF repo to load as the HF adapter.
+          type: string
+          nullable: true
+
+    ImageStrengthRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseImageToImageRequest'
+        - type: object
+          required:
+            - image_strength
+          properties:
+            image_strength:
+              type: number
+              format: float
+              default: 0.1
+              minimum: 0.0
+              maximum: 1.0
+
+    StepScheduleRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseImageToImageRequest'
+        - type: object
+          required:
+            - step_schedule_start
+            - step_schedule_end
+          properties:
+            step_schedule_start:
+              type: number
+              format: float
+              default: 0.65
+            step_schedule_end:
+              type: number
+              format: float
+
+    CreateImageToImageRequest:
+      discriminator:
+        propertyName: init_image_mode
+        mapping:
+          IMAGE_STRENGTH: '#/components/schemas/ImageStrengthRequest'
+          STEP_SCHEDULE: '#/components/schemas/StepScheduleRequest'
+      anyOf:
+        - $ref: '#/components/schemas/ImageStrengthRequest'
+        - $ref: '#/components/schemas/StepScheduleRequest'
+
+    CreateControlNetRequest:
+      type: object
+      description: Request object to transform textual prompts into high-quality images using diffusion models while using image as a guidance via ControlNet.
+      properties:
+        prompt:
+          type: string
+          description: The prompt to use when transforming the image
+        negative_prompt:
+          type: string
+          description: The negative prompt to use when transforming the image
+          default: null
+        control_image:
+          $ref: '#/components/schemas/ControlImage'
+        control_net_name:
+          description: Which ControlNet to use. Currently only "canny" is supported
+          enum: ["canny"]
+          type: string
+          default: "canny"
+        conditioning_scale:
+          description: Scaler from 0 to 1 of the guidance strength from control image.
+          type: number
+          format: float
+          default: 0.5
+        step_schedule_start:
+          type: number
+          format: float
+          default: 0.0
+        step_schedule_end:
+          type: number
+          format: float
+          default: 1.0
+        cfg_scale:
+          $ref: '#/components/schemas/CFGScale'
+        clip_guidance_preset:
+          type: string
+          default: "NONE"
+        sampler:
+          $ref: '#/components/schemas/Sampler'
+        samples:
+          $ref: '#/components/schemas/Samples'
+        steps:
+          $ref: '#/components/schemas/Steps'
+        seed:
+          $ref: '#/components/schemas/Seed'
+        safety_check:
+          description: Enable a safety check for each response. If the safety check model detects unsafe content, the response will be filtered with Finish-Reason = CONTENT_FILTERED.
+          type: boolean
+          default: false
+        lora_adapter_name:
+          description: A huggingface name (e.g. jbilcke-hf/sdxl-botw) that specifies which LoRA adapter to load and run in SDXL inference.
+          type: string
+          nullable: true
+        lora_weight_filename:
+          description: The filename (e.g. lora.safetensors) of the file within the HF repo to load as the HF adapter.
+          type: string
+          nullable: true
+      required:
+        - model
+        - prompt
+        - control_image
+
+    CreateImageRequest:
+      type: object
+      description: Request object to transform textual prompts into high-quality images using diffusion models.
+      properties:
+        height:
+          $ref: '#/components/schemas/Height'
+        width:
+          $ref: '#/components/schemas/Width'
+        text_prompts:
+          type: array
+          items:
+            '$ref': '#/components/schemas/TextPrompt'
+          minItems: 1
+        cfg_scale:
+          $ref: '#/components/schemas/CFGScale'
+        sampler:
+          $ref: '#/components/schemas/Sampler'
+        samples:
+          $ref: '#/components/schemas/Samples'
+        seed:
+          $ref: '#/components/schemas/Seed'
+        steps:
+          $ref: '#/components/schemas/Steps'
+        safety_check:
+          description: Enable a safety check for each response. If the safety check model detects unsafe content, the response will be filtered with Finish-Reason = CONTENT_FILTERED.
+          type: boolean
+          default: false
+        lora_adapter_name:
+          description: A huggingface name (e.g. jbilcke-hf/sdxl-botw) that specifies which LoRA adapter to load and run in SDXL inference.
+          type: string
+          nullable: true
+        lora_weight_filename:
+          description: The filename (e.g. lora.safetensors) of the file within the HF repo to load as the HF adapter.
+          type: string
+          nullable: true
+      required:
+        - model
+        - text_prompts
+
+    BaseCreateCompletionRequest:
+      type: object
+      properties:
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 1
+          example: 1
+          nullable: true
+          description: |
+            What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+            We generally recommend altering this or `top_p` but not both.
+        top_p:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 1
+          example: 1
+          nullable: true
+          description: |
+            An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+            We generally recommend altering this or `temperature` but not both.
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 128
+          example: 50
+          nullable: true
+          description: |
+            Top-k sampling is another sampling method where the k most probable next tokens are filtered and the probability mass is redistributed among only those k next tokens. The value of k controls the number of candidates for the next token at each step during text generation.
+        frequency_penalty:
+          type: number
+          default: 0
+          minimum: -2
+          maximum: 2
+          nullable: true
+          description: |
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+            Reasonable value is around 0.1 to 1 if the aim is to just reduce repetitive samples somewhat. If the aim is to strongly suppress repetition, then one can increase the coefficients up to 2, but this can noticeably degrade the quality of samples. Negative values can be used to increase the likelihood of repetition.
+
+            See also `presence_penalty` for penalizing tokens that have at least one appearance at a fixed rate.
+        presence_penalty:
+          type: number
+          default: 0
+          minimum: -2
+          maximum: 2
+          nullable: true
+          description: |
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+
+            Reasonable value is around 0.1 to 1 if the aim is to just reduce repetitive samples somewhat. If the aim is to strongly suppress repetition, then one can increase the coefficients up to 2, but this can noticeably degrade the quality of samples. Negative values can be used to increase the likelihood of repetition.
+
+            See also `frequence_penalty` for penalizing tokens at an increasing rate depending on how often they appear.
+        n:
+          type: integer
+          minimum: 1
+          maximum: 128
+          default: 1
+          example: 1
+          nullable: true
+          description: |
+            How many completions to generate for each prompt.
+
+            **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_tokens` and `stop`.
+        stop:
+          description: |
+            Up to 4 sequences where the API will stop generating further tokens. The returned text will contain the stop sequence.
+          default: null
+          oneOf:
+            - type: string
+              nullable: true
+            - type: array
+              minItems: 1
+              maxItems: 4
+              items:
+                type: string
+        response_format:
+          type: object
+          description: |
+            Allows to force the model to produce specific output format.
+
+            Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
+
+            Optional JSON schema can be provided as `response_format = {"type": "json_object", "schema": <json_schema>}`.
+
+            **Important:** when using JSON mode, it's crucial to also instruct the model to produce JSON via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length. In this case the return value might not be a valid JSON.
+          nullable: true
+          default: null
+          properties:
+            type:
+              type: string
+              enum: ["text", "json_object"]
+              example: "json_object"
+              default: "text"
+              description: Must be one of `text` or `json_object`.
+            schema:
+              type: object
+              default: null
+              nullable: true
+              description: |
+                JSON schema according to https://json-schema.org/specification that can be provided if `"type": "json_object"`.
+
+                Most common fields like `type`, `properties`, `items`, `required` and `anyOf` are supported.
+
+                More sophisticated cases like `oneOf` might not be covered.
+
+                Note: it's an OpenAI API extension.
+
+                Example: `{"type": "object", "properties": {"foo": {"type": "string"}, "bar": {"type": "integer"}}, "required": ["foo"]}`
+          required:
+            - type
+        stream:
+          description: |
+            Whether to stream back partial progress. If set, tokens will be sent as data-only [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format)
+            as they become available, with the stream terminated by a `data: [DONE]` message.
+          type: boolean
+          nullable: true
+          default: false
+        context_length_exceeded_behavior:
+          type: string
+          enum:
+            - truncate
+            - error
+          description: |
+            What to do if the token count of prompt plus `max_tokens` exceeds the model's context window.
+
+            Passing `truncate` limits the `max_tokens` to at most `context_window_length - prompt_length`. This is the default.
+
+            Passing `error` would trigger a request error.
+
+            The default of 'truncate' is selected as it allows to ask for high `max_tokens` value while respecting the context window length without having to do client-side prompt tokenization.
+
+            Note, that it differs from OpenAI's behavior that matches that of `error`.
+        user:
+          description: "A unique identifier representing your end-user, which can help monitor and detect abuse"
+          type: string
+          nullable: true
+
+    CreateCompletionExclusiveFields:
+      type: object
+      properties:
+        model:
+          description: "The name of the model to use."
+          type: string
+          example: accounts/fireworks/models/llama-v2-7b
+        prompt:
+          description:  |
+            The prompt to generate completions for.
+            It can be a single string or an array of strings.
+            It can also be an array of integers or an array of integer arrays,
+            which allows to pass already tokenized prompt.
+            If multiple prompts are specified, several choices with corresponding `index` will be returned in the output."
+          oneOf:
+            - type: string
+              example: The sky is
+            - type: array
+              minItems: 1
+              items:
+                type: string
+                example: The sky is
+            - type: array
+              minItems: 1
+              items:
+                type: integer
+              example: "[123, 10, 456]"
+            - type: array
+              minItems: 1
+              items:
+                type: array
+                minItems: 1
+                items:
+                  type: integer
+              example: "[[123, 10, 456], [100, 543]]"
+        images:
+          description: |
+            The list of base64 encoded images for visual language completition generation.
+            They should be formatted as MIME_TYPE,\<base64 encoded str\>
+            eg. data:image/jpeg;base64,\<base64 encoded str\>
+            Additionally, the number of images provided should match the number of '\<image\>' special token in the prompt
+          type: array
+          items:
+            type: string
+        max_tokens:
+          type: integer
+          minimum: 0
+          default: 16
+          example: 16
+          nullable: true
+          description: |
+            The maximum number of tokens to generate in the completion.
+
+            If the token count of your prompt plus `max_tokens` exceed the model's context length, the behavior is depends on `context_length_exceeded_behavior`. By default, `max_tokens` will be lowered to fit in the context window instead of returning an error.
+        logprobs:
+          type: integer
+          minimum: 0
+          maximum: 5
+          default:
+          nullable: true
+          description: |
+            Include the log probabilities on the `logprobs` most likely tokens, as well the chosen tokens. For example, if `logprobs` is 5, the API will return a list of the 5 most likely tokens. The API will always return the `logprob` of the sampled token, so there may be up to `logprobs+1` elements in the response.
+
+            The maximum value for `logprobs` is 5.
+        echo:
+          type: boolean
+          default: false
+          nullable: true
+          description: "Echo back the prompt in addition to the completion."
+      required:
+        - model
+        - prompt
+    CreateCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A unique identifier of the response.
+        object:
+          type: string
+          description: The object type, which is always "text_completion".
+        created:
+          type: integer
+          description: The Unix time in seconds when the response was generated.
+        model:
+          type: string
+          description: The model used for the completion.
+        choices:
+          type: array
+          description: The list of generated completion choices.
+          items:
+            type: object
+            required:
+              - text
+              - index
+              - logprobs
+              - finish_reason
+            properties:
+              text:
+                type: string
+                description: The completion response.
+              index:
+                type: integer
+                description: The index of the completion choice.
+              logprobs:
+                type: object
+                description: The log probabilities of the most likely tokens.
+                nullable: true
+                properties:
+                  tokens:
+                    type: array
+                    items:
+                      type: string
+                  token_logprobs:
+                    type: array
+                    items:
+                      type: number
+                  top_logprobs:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        type: integer
+                  text_offset:
+                    type: array
+                    items:
+                      type: integer
+              finish_reason:
+                type: string
+                description: |
+                  The reason the model stopped generating tokens. This will be "stop" if
+                  the model hit a natural stop point or a provided stop sequence, or
+                  "length" if the maximum number of tokens specified in the request was
+                  reached.
+                enum:
+                  - stop
+                  - length
+        usage:
+          "$ref": "#/components/schemas/UsageInfo"
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+
+    CreateChatCompletionExclusiveFields:
+      type: object
+      properties:
+        model:
+          description: The name of the model to use.
+          type: string
+          example: accounts/fireworks/models/llama-v2-7b-chat
+        messages:
+          description: A list of messages comprising the conversation so far.
+          type: array
+          minItems: 1
+          items:
+            "$ref": "#/components/schemas/ChatCompletionRequestMessage"
+        tools:
+          type: array
+          description: >
+            A list of tools the model may call. Currently, only functions are supported as a tool.
+
+            Use this to provide a list of functions the model may generate JSON inputs for.
+
+            See the guide for more information and the list of supported models: https://readme.fireworks.ai/docs/function-calling#supported-models
+          items:
+            $ref: "#/components/schemas/ChatCompletionTool"
+        max_tokens:
+          description: |
+            The maximum number of tokens to generate in the completion.
+
+            If the token count of your prompt (previous messages) plus `max_tokens` exceed the model's context length, the behavior is depends on `context_length_exceeded_behavior`. By default, `max_tokens` will be lowered to fit in the context window instead of returning an error.
+          default: 200
+          type: integer
+        prompt_truncate_len:
+          description: |
+            The size to which to truncate chat prompts. Earlier user/assistant messages will be evicted to fit the prompt into this length.
+
+            This should usually be set to a number << the max context size of the model, to allow enough remaining tokens for generating a response.
+
+            If omitted, you may receive "prompt too long" errors in your responses as conversations grow. Note that even with this set, you may still receive "prompt too long" errors if individual messages are too long for the model context window.
+          default: 1500
+          nullable: true
+          type: integer
+      required:
+        - model
+        - messages
+
+    CreateChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A unique identifier of the response.
+        object:
+          type: string
+          description: The object type, which is always "chat.completion".
+        created:
+          type: integer
+          description: The Unix time in seconds when the response was generated.
+        model:
+          type: string
+          description: The model used for the chat completion.
+        choices:
+          type: array
+          description: The list of chat completion choices.
+          items:
+            type: object
+            required:
+              - index
+              - message
+              - finish_reason
+            properties:
+              index:
+                type: integer
+                description: The index of the chat completion choice.
+              message:
+                "$ref": "#/components/schemas/ChatCompletionResponseMessage"
+              finish_reason:
+                type: string
+                description: |
+                  The reason the model stopped generating tokens. This will be "stop" if
+                  the model hit a natural stop point or a provided stop sequence, or
+                  "length" if the maximum number of tokens specified in the request was
+                  reached.
+                enum:
+                  - stop
+                  - length
+        usage:
+          "$ref": "#/components/schemas/UsageInfo"
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+    CreateChatCompletionStreamResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            required:
+              - index
+              - delta
+              - finish_reason
+            properties:
+              index:
+                type: integer
+              delta:
+                "$ref": "#/components/schemas/ChatCompletionStreamResponseDelta"
+              finish_reason:
+                type: string
+                enum:
+                  - stop
+                  - length
+                nullable: true
+        usage:
+          "$ref": "#/components/schemas/UsageInfo"
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+    ChatCompletionRequestMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+          description:
+            The role of the messages author. One of `system`, `user`, or
+            `assistant`.
+        content:
+          oneOf:
+            - type: string
+              nullable: true
+              description: |
+                The contents of the message. `content` is required for all
+                messages, and may be null for assistant messages with function calls.
+            - type: array
+              description: "A list of chat messages that could contain images or texts"
+              items:
+                  $ref: "#/components/schemas/ChatMessageContent"
+        name:
+          type: string
+          description:
+            The name of the author of this message. May contain a-z, A-Z,
+            0-9, and underscores, with a maximum length of 64 characters.
+      required:
+        - role
+        - content
+
+    ChatMessageContent:
+      description: |
+        The content of the message. Can either be text or image_url.
+      oneOf:
+        - type: object
+          description: "A message containing text"
+          properties:
+            type:
+              type: string
+              enum:
+                - text
+            text:
+              type: string
+              description: "The content of the message."
+        - type: object
+          description: "A message containing image"
+          properties:
+            type:
+              type: string
+              enum:
+                - image_url
+            image_url:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: |
+                    base64 encoded string for image formatted as MIME_TYPE,\<base64 encoded str\>
+                    eg. data:image/jpeg;base64,\<base64 encoded str\>
+
+    ChatCompletionResponseMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+          description: The role of the author of this message.
+        content:
+          type: string
+          description: The contents of the message.
+          nullable: true
+        tool_calls:
+          $ref: "#/components/schemas/ChatCompletionMessageToolCalls"
+      required:
+        - role
+
+    ChatCompletionMessageToolCalls:
+      type: array
+      description: The tool calls generated by the model, such as function calls.
+      items:
+        $ref: "#/components/schemas/ChatCompletionMessageToolCall"
+
+    ChatCompletionMessageToolCall:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the tool call.
+        type:
+          type: string
+          enum: ["function"]
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          type: object
+          description: The function that the model called.
+          properties:
+            name:
+              type: string
+              description: The name of the function to call.
+            arguments:
+              type: string
+              description: The arguments to call the function with, as generated by the model in JSON format. Note that the model does not always generate valid JSON, and may hallucinate parameters not defined by your function schema. Validate the arguments in your code before calling your function.
+          required:
+            - name
+            - arguments
+      required:
+        - id
+        - type
+        - function
+
+    ChatCompletionStreamResponseDelta:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+            - tool
+          description: The role of the author of this message.
+        content:
+          type: string
+          description: The contents of the chunk message.
+          nullable: true
+        tool_calls:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatCompletionMessageToolCallChunk"
+
+    ChatCompletionMessageToolCallChunk:
+      type: object
+      properties:
+        index:
+          type: integer
+        id:
+          type: string
+          description: The ID of the tool call.
+        type:
+          type: string
+          enum: ["function"]
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the function to call.
+            arguments:
+              type: string
+              description: The arguments to call the function with, as generated by the model in JSON format. Note that the model does not always generate valid JSON, and may hallucinate parameters not defined by your function schema. Validate the arguments in your code before calling your function.
+      required:
+        - index
+
+    ChatCompletionTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["function"]
+          description: The type of the tool. Currently, only `function` is supported.
+        function:
+          $ref: "#/components/schemas/FunctionObject"
+      required:
+        - type
+        - function
+
+    FunctionObject:
+      type: object
+      properties:
+        description:
+          type: string
+          description: A description of what the function does, used by the model to choose when and how to call the function.
+        name:
+          type: string
+          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        parameters:
+          $ref: "#/components/schemas/FunctionParameters"
+      required:
+        - name
+        - parameters
+
+    FunctionParameters:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["object"]
+          description: type of parameter
+        required:
+          type: array
+          description: which one of the parameter is required
+          items:
+            type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              type:
+                type: string
+                description: The type of the property
+              description:
+                type: string
+                description: A description of the property
+          description: >-
+            A map of property names to their types and descriptions.
+            Each property is an object with 'type' and 'description' fields.
+      description: "The parameters the functions accepts, described as a JSON Schema object. \n\nTo describe a function that accepts no parameters, provide the value `{\"type\": \"object\", \"properties\": {}}`."
+
+    UsageInfo:
+      type: object
+      description: |
+        Usage statistics.
+
+        For streaming responses, `usage` field is included in the very last response chunk returned.
+
+        Note that returning `usage` for streaming requests is an OpenAI API extension. If you use OpenAI SDK, you might access the field directly even if it's not present in the type signature in the SDK.
+      properties:
+        prompt_tokens:
+          type: integer
+          description: The number of tokens in the prompt.
+        completion_tokens:
+          type: integer
+          description: The number of tokens in the generated completion.
+        total_tokens:
+          type: integer
+          description: The total number of tokens used in the request (prompt + completion).
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
+    CreateEmbeddingRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        input:
+          description: |
+            Input text to embed, encoded as a string. To embed multiple inputs in a single request, pass an array of strings. The input must not exceed the max input tokens for the model (8192 tokens for `nomic-ai/nomic-embed-text-v1.5`), cannot be an empty string, and any array must be 2048 dimensions or less.
+          example: "The quick brown fox jumped over the lazy dog"
+          oneOf:
+            - type: string
+              title: string
+              description: The string that will be turned into an embedding.
+              default: ""
+              example: "This is a test."
+            - type: array
+              title: array
+              description: The array of strings that will be turned into an embedding.
+              minItems: 1
+              maxItems: 2048
+              items:
+                type: string
+                default: ""
+                example: "['This is a test.']"
+          x-oaiExpandable: true
+        model:
+          example: "nomic-ai/nomic-embed-text-v1.5"
+          anyOf:
+            - type: string
+            - type: string
+              enum: ["nomic-ai/nomic-embed-text-v1.5", "thenlper/gte-base"]
+          x-oaiTypeLabel: string
+        dimensions:
+          description: |
+            The number of dimensions the resulting output embeddings should have. Only supported in `nomic-ai/nomic-embed-text-v1.5` and later models.
+          type: integer
+          minimum: 1
+      required:
+        - model
+        - input
+    Embedding:
+      type: object
+      description: |
+        Represents an embedding vector returned by embedding endpoint.
+      properties:
+        index:
+          type: integer
+          description: The index of the embedding in the list of embeddings.
+        embedding:
+          type: array
+          description: |
+            The embedding vector, which is a list of floats. The length of vector depends on the model as listed in the [embedding guide](/docs/guides/embeddings).
+          items:
+            type: number
+        object:
+          type: string
+          description: The object type, which is always "embedding".
+          enum: [embedding]
+      required:
+        - index
+        - object
+        - embedding
+      x-oaiMeta:
+        name: The embedding object
+        example: |
+          {
+            "object": "embedding",
+            "embedding": [
+              0.0023064255,
+              -0.009327292,
+              .... (1536 floats total for ada-002)
+              -0.0028842222,
+            ],
+            "index": 0
+          }
+    CreateEmbeddingResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: The list of embeddings generated by the model.
+          items:
+            $ref: "#/components/schemas/Embedding"
+        model:
+          type: string
+          description: The name of the model used to generate the embedding.
+        object:
+          type: string
+          description: The object type, which is always "list".
+          enum: [list]
+        usage:
+          type: object
+          description: The usage information for the request.
+          properties:
+            prompt_tokens:
+              type: integer
+              description: The number of tokens used by the prompt.
+            total_tokens:
+              type: integer
+              description: The total number of tokens used by the request.
+          required:
+            - prompt_tokens
+            - total_tokens
+      required:
+        - object
+        - model
+        - data
+        - usage
+  responses:
+    ImageResponse:
+      description: OK response. The return format for the image is controlled by the `accept` header in the request. Single image can be returned as `image/png` or `image/jpeg`. Multiple images need to be returned as `application/json` with base64-encoded PNGs inline.
+      content:
+        image/png:
+          schema:
+            type: string
+            format: binary
+        image/jpeg:
+          schema:
+            type: string
+            format: binary
+        application/json:
+          schema:
+            type: object
+            properties:
+              image:
+                type: string
+                format: binary
+              Finish-Reason:
+                type: string
+                enum: ["CONTENT_FILTERED", "ERROR", "SUCCESS"]
+      headers:
+        Finish-Reason:
+          description: The result of the generation process. `SUCCESS` indicates success. `ERROR` indicates an error. `CONTENT_FILTERED` indicates the result affected by the content filter and may be blurred. This header is only present when the `Accept` is set to `image/png` or `image/jpeg`. Otherwise it is returned in the response body.
+          schema:
+            type: string
+            enum: ["CONTENT_FILTERED", "ERROR", "SUCCESS"]
+security:
+  - BearerAuth: []
+x-readme:
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
