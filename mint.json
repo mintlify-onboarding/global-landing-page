@@ -132,13 +132,12 @@
     {
       "group": "API Reference",
       "pages": [
-        "guides/api-reference/get-client-token",
-        "guides/api-reference/get-quote",
-        "guides/api-reference/get-supported-tokens",
-        "guides/api-reference/get-enabled-tokens",
-        "guides/api-reference/get-orders",
-        "guides/api-reference/get-geocoverage",
-        "guides/api-reference/get-fiat-currencies"
+        "guides/api-reference/post-chatcompletions",
+        "guides/api-reference/post-completions",
+        "guides/api-reference/generate-a-new-image-from-a-text-prompt",
+        "guides/api-reference/generate-a-new-image-from-an-image",
+        "guides/api-reference/generate-a-new-image-using-controlnet-with-provided-image-as-a-guidance",
+        "guides/api-reference/creates-an-embedding-vector-representing-the-input-text"
       ]
     },
     {
